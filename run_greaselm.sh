@@ -10,9 +10,11 @@ args=$@
 
 
 # elr="1e-5"
-elr=3.9e-8
+# elr=3.9e-8
+elr=5e-6
 # dlr="1e-3"
-dlr=3.9e-06
+# dlr=3.9e-06
+dlr=5e-6
 
 # bs=128
 bs=1
