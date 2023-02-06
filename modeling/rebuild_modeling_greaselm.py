@@ -25,6 +25,15 @@ from modeling import modeling_gnn
 from utils import layers
 from utils import utils
 
+logger = logging.getLogger(__name__)
+
+if os.environ.get('INHERIT_BERT', 0):
+    ModelClass = modeling_bert.BertModel
+else:
+    ModelClass = modeling_roberta.RobertaModel
+
+print(f'ModelClass: {ModelClass}')
+
 
 class GreaseLM(nn.Module):
     def __init__(
@@ -147,10 +156,6 @@ class LMGNN(nn.Module):
         raise NotImplementedError
 
 
-def test_LMGNN():
-    raise NotImplementedError
-
-
 class TextKGMessagePassing(ModelClass):
     def __init__(
             self,
@@ -168,6 +173,52 @@ class TextKGMessagePassing(ModelClass):
             sep_ie_layers=False):
         raise NotImplementedError
 
+    def _init_weights(self, module):
+        raise NotImplementedError
+
+    def forward(self, input_ids, token_type_ids, attention_mask, special_tokens_mask, H, A, node_type, node_score, special_nodes_mask, cache_output=False, position_ids=None, head_mask=None, output_hidden_states=True):
+        raise NotImplementedError
+
+    @classmethod
+    def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
+        raise NotImplementedError
+
+    def get_fake_inputs(self, device="cuda:0"):
+        raise NotImplementedError
+
+    def check_outputs(self, outputs, gnn_output):
+        raise NotImplementedError
+
 
 class RoBERTaGAT(modeling_bert.BertEncoder):
-    raise NotImplementedError
+
+    def __init__(self, config, k=5, n_ntype=4, n_etype=38, hidden_size=200, dropout=0.2, concept_dim=200, ie_dim=200, p_fc=0.2, info_exchange=True, ie_layer_num=1, sep_ie_layers=False):
+        raise NotImplementedError
+
+    def forward(self, hidden_states, attention_mask, special_tokens_mask, head_mask, _X, edge_index, edge_type, _node_type, _node_feature_extra, special_nodes_mask, output_attentions=False, output_hidden_states=True):
+        raise NotImplementedError
+
+    def get_fake_inputs(self, device="cuda:0"):
+        raise NotImplementedError
+
+    def check_outputs(self, outputs, _X):
+        raise NotImplementedError
+
+
+if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(name)s:%(funcName)s():%(lineno)d] %(message)s',
+                        datefmt='%m/%d/%Y %H:%M:%S',
+                        level=logging.INFO)
+
+    utils.print_cuda_info()
+    free_gpus = utils.select_free_gpus()
+    device = torch.device("cuda:{}".format(free_gpus[0]))
+
+    # test_RoBERTaGAT(device)
+
+    # test_TextKGMessagePassing(device)
+
+    # test_LMGNN(device)
+
+    test_GreaseLM(device)
+
