@@ -1,3 +1,11 @@
+# Korea University MLV 2023 Winter Research Internship
+## 0. Project Plan
+
+This repo aims to rebuild [GreaseLM: Graph REASoning Enhanced Language Models for Question Answering](https://arxiv.org/abs/2201.08860) (ICLR 2022 spotlight) and conduct some additional experiments.
+# Original README
+<hr/>
+<hr/>
+<hr/>
 # GreaseLM: Graph REASoning Enhanced Language Models for Question Answering
 
 This repo provides the source code & data of our paper [GreaseLM: Graph REASoning Enhanced Language Models for Question Answering](https://arxiv.org/abs/2201.08860) (ICLR 2022 spotlight). If you use any of our code, processed data or pretrained models, please cite:
