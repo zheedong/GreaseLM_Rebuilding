@@ -2,9 +2,8 @@
 ## 0. Project Plan
 
 This repo aims to rebuild [GreaseLM: Graph REASoning Enhanced Language Models for Question Answering](https://arxiv.org/abs/2201.08860) (ICLR 2022 spotlight) and conduct some additional experiments.
-# Original README
 <hr/>
-<hr/>
+<p style="text-align: center;">Below original README</p>
 <hr/>
 
 # GreaseLM: Graph REASoning Enhanced Language Models for Question Answering
