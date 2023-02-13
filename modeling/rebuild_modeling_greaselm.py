@@ -85,20 +85,24 @@ class GreaseLM(nn.Module):
             sep_ie_layers,
             layer_id)
 
-        def batch_graph(self, edge_index_init, edge_type_init, n_nodes):
-            raise NotImplementedError
+    def batch_graph(self, edge_index_init, edge_type_init, n_nodes):
+        n_examples = len(edge_index_init)
+        edge_index = [edge_index_init[_i_] + _i_ * n_nodes for _i_ in range(n_examples)]
+        edge_index = torch.cat(edge_index, dim=1)
+        edge_type = torch.cate(edge_type_init, dim=1)
+        return edge_index, edge_type
 
-        def forward(self, *inputs, cache_output=False, detail=False):
-            raise NotImplementedError
+    def forward(self, *inputs, cache_output=False, detail=False):
+        raise NotImplementedError
 
-        def get_fake_inputs(self, device="cuda:0"):
-            raise NotImplementedError
+    def get_fake_inputs(self, device="cuda:0"):
+        raise NotImplementedError
 
-        def get_fake_inputs(self, device="cuda:0"):
-            raise NotImplementedError
+    def get_fake_inputs(self, device="cuda:0"):
+        raise NotImplementedError
 
-        def check_outputs(self, logits, attn):
-            raise NotImplementedError
+    def check_outputs(self, logits, attn):
+        raise NotImplementedError
 
 
 def test_GreaseLM():
