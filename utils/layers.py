@@ -102,23 +102,21 @@ class Exchange(nn.Module):
         lm_feats, gnn_feats = torch.split(input, [self.sent_dim, self.concept_dim], dim=1)
         return torch.cat([self.concept2text(gnn_feats), self.text2concept(lm_feats)], dim=1)
 
-class ExchangedResidualConnectedMLP(nn.Module):
+class ExchangeResidualConnect(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers, dropout, batch_norm=False,
-                 init_last_layer_bias_to_zero=False, layer_norm=False, activation='gelu'):
+                 init_last_layer_bias_to_zero=False, layer_norm=False, activation='gelu', use_MLP=True):
         super().__init__()
+
         self.mlp = MLP(input_size, hidden_size, output_size, num_layers, dropout, batch_norm, init_last_layer_bias_to_zero, layer_norm, activation)
         self.exchange = Exchange(input_size, output_size, output_size)
 
-    def forward(self, input):
-        return self.mlp(input) + self.exchange(input)
-
-class ExchangedResidualConnectedWithoutMLP(nn.Module):
-    def __init__(self, input_size, output_size):
-        super().__init__()
-        self.exchange = Exchange(input_size, output_size, output_size)
+        if use_MLP:
+            self.layer = self.exchange(input) + self.mlp(input)
+        else:
+            self.layer = self.exchange(input) + input
 
     def forward(self, input):
-        return self.exchange(input) + input
+        return self.layer(input)
 
 # My Implementation ends here
 
