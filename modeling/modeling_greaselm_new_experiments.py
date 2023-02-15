@@ -792,16 +792,19 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
         else:
             self.ie_layer = layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc)
         '''
+
         # My modification
         self.sep_ie_layers = sep_ie_layers
         if sep_ie_layers:
+            # self.ie_layers = nn.ModuleList([layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc) for _ in range(k)])
             self.ie_layers = nn.ModuleList([layers.Exchange(self.sent_dim + concept_dim, self.sent_dim, concept_dim) for _ in range(k)])
             # self.ie_layers = nn.ModuleList([layers.ExchangedResidualConnectedMLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc) for _ in range(k)])
             # self.ie_layers = nn.ModuleList([layers.ExchangeResidualConnectedWithoutMLP(self.sent_dim + concept_dim, self.sent_dim, concept_dim) for _ in range(k)])
         else:
+            # self.ie_layer = layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc)
             self.ie_layer = layers.Exchange(self.sent_dim + concept_dim, self.sent_dim, concept_dim)
-            # self.ie_layers = layers.ExchangedResidualConnectedMLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc) for _ in range(k)
-            # self.ie_layers = layers.ExchangeResidualConnectedWithoutMLP(self.sent_dim + concept_dim, self.sent_dim, concept_dim) for _ in range(k)
+            # self.ie_layers = layers.ExchangedResidualConnectedMLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc)
+            # self.ie_layers = layers.ExchangedResidualConnectedWithoutMLP(self.sent_dim + concept_dim, self.sent_dim, concept_dim)
 
         self.concept_dim = concept_dim
         self.num_hidden_layers = config.num_hidden_layers
