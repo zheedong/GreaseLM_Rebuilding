@@ -784,15 +784,23 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
         self.dropout_rate = dropout
 
         self.sent_dim = config.hidden_size
+        '''
         self.sep_ie_layers = sep_ie_layers
         if sep_ie_layers:
             self.ie_layers = nn.ModuleList([layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc) for _ in range(k)])
         else:
             self.ie_layer = layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc)
+        '''
+        self.sep_ie_layers = sep_ie_layers
+        if sep_ie_layers:
+            self.ie_layers = nn.ModuleList([layers.Exchange(self.sent_dim + concept_dim, self.sent_dim, concept_dim) for _ in range(k)])
+        else:
+            self.ie_layer = layers.Exchange(self.sent_dim + concept_dim, self.sent_dim, concept_dim)
 
         self.concept_dim = concept_dim
         self.num_hidden_layers = config.num_hidden_layers
         self.info_exchange = info_exchange
+
 
     def forward(self, hidden_states, attention_mask, special_tokens_mask, head_mask, _X, edge_index, edge_type, _node_type, _node_feature_extra, special_nodes_mask, output_attentions=False, output_hidden_states=True):
         """
@@ -827,7 +835,23 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
                 _X = self.activation(_X)
                 _X = F.dropout(_X, self.dropout_rate, training = self.training)
 
+                '''
                 # Exchange info between LM and GNN hidden states (Modality interaction)
+                if self.info_exchange == True or (self.info_exchange == "every-other-layer" and (i - self.num_hidden_layers + self.k) % 2 == 0):
+                    X = _X.view(bs, -1, _X.size(1)) # [bs, max_num_nodes, node_dim]
+                    context_node_lm_feats = hidden_states[:, 0, :] # [bs, sent_dim]
+                    context_node_gnn_feats = X[:, 0, :] # [bs, node_dim]
+                    context_node_feats = torch.cat([context_node_lm_feats, context_node_gnn_feats], dim=1)
+                    if self.sep_ie_layers:
+                        context_node_feats = self.ie_layers[gnn_layer_index](context_node_feats)
+                    else:
+                        context_node_feats = self.ie_layer(context_node_feats)
+                    context_node_lm_feats, context_node_gnn_feats = torch.split(context_node_feats, [context_node_lm_feats.size(1), context_node_gnn_feats.size(1)], dim=1)
+                    hidden_states[:, 0, :] = context_node_lm_feats
+                    X[:, 0, :] = context_node_gnn_feats
+                    _X = X.view_as(_X)
+                '''
+                # My interaction
                 if self.info_exchange == True or (self.info_exchange == "every-other-layer" and (i - self.num_hidden_layers + self.k) % 2 == 0):
                     X = _X.view(bs, -1, _X.size(1)) # [bs, max_num_nodes, node_dim]
                     context_node_lm_feats = hidden_states[:, 0, :] # [bs, sent_dim]

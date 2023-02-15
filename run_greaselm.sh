@@ -11,10 +11,16 @@ args=$@
 
 # elr="1e-5"
 # elr=3.9e-8
-elr=5e-6
+# elr=5e-6
+# elr="5e-8"
+# elr="1e-7"
+elr="8e-8"
 # dlr="1e-3"
 # dlr=3.9e-06
-dlr=5e-6
+# dlr=5e-6
+# dlr="5e-6"
+# dlr="5e-6"
+dlr="4e-6"
 
 # bs=128
 bs=1
@@ -36,7 +42,8 @@ then
   max_epochs_before_stop=10
   ie_dim=400
 else
-  n_epochs=30
+  n_epochs=50
+  # n_epochs=30
   max_epochs_before_stop=10
   ie_dim=400
 fi

@@ -86,6 +86,19 @@ class MLP(nn.Module):
     def forward(self, input):
         return self.layers(input)
 
+class Exchange(nn.Module):
+    def __init__(self, input_size, sent_dim, concept_dim):
+        super().__init__()
+        self.input_size = input_size
+        self.sent_dim = sent_dim
+        self.concept_dim = concept_dim
+
+        self.text2concept = nn.Linear(self.sent_dim, self.concept_dim)
+        self.concept2text = nn.Linear(self.concept_dim, self.sent_dim)
+
+    def forward(self, input):
+        lm_feats, gnn_feats = torch.split(input, [self.sent_dim, self.concept_dim], dim=1)
+        return torch.cat([self.concept2text(gnn_feats), self.text2concept(lm_feats)], dim=1)
 
 class MaxPoolLayer(nn.Module):
     """
