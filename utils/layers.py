@@ -104,19 +104,19 @@ class Exchange(nn.Module):
 
 class ExchangeResidualConnect(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers, dropout, batch_norm=False,
-                 init_last_layer_bias_to_zero=False, layer_norm=False, activation='gelu', use_MLP=True):
+                 init_last_layer_bias_to_zero=False, layer_norm=False, activation='gelu', use_MLP=True, alpha=0.5):
         super().__init__()
 
         self.mlp = MLP(input_size, hidden_size, output_size, num_layers, dropout, batch_norm, init_last_layer_bias_to_zero, layer_norm, activation)
         self.exchange = Exchange(input_size, output_size, output_size)
+        self.alpha = alpha
+        self.use_MLP = use_MLP
 
-        if use_MLP:
-            self.layer = self.exchange(input) + self.mlp(input)
+    def forward(self, inp):
+        if self.use_MLP:
+            return self.alpha * self.exchange(inp) + self.alpha * self.mlp(inp)
         else:
-            self.layer = self.exchange(input) + input
-
-    def forward(self, input):
-        return self.layer(input)
+            self.layer = self.alpha * self.exchange(inp) + self.alpha * inp
 
 # My Implementation ends here
 
