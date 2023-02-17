@@ -86,7 +86,9 @@ class MLP(nn.Module):
     def forward(self, input):
         return self.layers(input)
 
+######################################################
 # My Implementation starts here
+######################################################
 
 class Exchange(nn.Module):
     def __init__(self, input_size, sent_dim, concept_dim):
@@ -114,11 +116,13 @@ class ExchangeResidualConnect(nn.Module):
 
     def forward(self, inp):
         if self.use_MLP:
-            return self.alpha * self.exchange(inp) + self.alpha * self.mlp(inp)
+            return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
         else:
-            self.layer = self.alpha * self.exchange(inp) + self.alpha * inp
+            return self.alpha * self.exchange(inp) + (1 - self.alpha) * inp
 
+######################################################
 # My Implementation ends here
+######################################################
 
 class MaxPoolLayer(nn.Module):
     """
