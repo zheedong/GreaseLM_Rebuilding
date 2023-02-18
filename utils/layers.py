@@ -100,13 +100,13 @@ class Exchange(nn.Module):
         self.text2concept = nn.Linear(self.sent_dim, self.concept_dim)
         self.concept2text = nn.Linear(self.concept_dim, self.sent_dim)
 
-    def forward(self, input):
-        lm_feats, gnn_feats = torch.split(input, [self.sent_dim, self.concept_dim], dim=1)
+    def forward(self, inp):
+        lm_feats, gnn_feats = torch.split(inp, [self.sent_dim, self.concept_dim], dim=1)
         return torch.cat([self.concept2text(gnn_feats), self.text2concept(lm_feats)], dim=1)
 
-class ExchangeResidualConnect(nn.Module):
+class ExchangeResidualConnectMLP(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers, dropout, batch_norm=False,
-                 init_last_layer_bias_to_zero=False, layer_norm=False, activation='gelu', use_MLP=True, alpha=0.5):
+                 init_last_layer_bias_to_zero=False, layer_norm=False, activation='gelu', alpha=0.5):
         super().__init__()
 
         self.mlp = MLP(input_size, hidden_size, output_size, num_layers, dropout, batch_norm, init_last_layer_bias_to_zero, layer_norm, activation)
@@ -115,10 +115,21 @@ class ExchangeResidualConnect(nn.Module):
         self.use_MLP = use_MLP
 
     def forward(self, inp):
-        if self.use_MLP:
-            return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
-        else:
-            return self.alpha * self.exchange(inp) + (1 - self.alpha) * inp
+        return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
+
+class ExchangeResidualConnect(nn.Module):
+    def __init__(self, input_size, sent_dim, concept_dim, alpha=0.5):
+        super().__init__()
+        self.input_size = input_size
+        self.sent_dim = sent_dim
+        self.concept_dim = concept_dim
+
+        self.exchange = Exchange(input_size, output_size, output_size)
+        self.alpha = alpha
+
+    def forward(self, inp):
+        return self.alpha * self.exchange(inp) + (1 - self.alpha) * inp
+
 
 ######################################################
 # My Implementation ends here
