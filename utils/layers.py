@@ -108,7 +108,7 @@ class ExchangeResidualConnectMLP(nn.Module):
         super().__init__()
 
         self.mlp = MLP(sent_dim + concept_dim, hidden_size, sent_dim + concept_dim, num_layers, dropout)
-        self.exchange = Exchange(sent_dim + concept_dim, sent_dim, concept_dim)
+        self.exchange = Exchange(sent_dim, concept_dim)
         self.alpha = alpha
 
     def forward(self, inp):
@@ -118,7 +118,7 @@ class ExchangeResidualConnect(nn.Module):
     def __init__(self, sent_dim, concept_dim, alpha=0.5):
         super().__init__()
 
-        self.exchange = Exchange(sent_dim + concept_dim, sent_dim, concept_dim)
+        self.exchange = Exchange(sent_dim, concept_dim)
         self.alpha = alpha
 
     def forward(self, inp):
