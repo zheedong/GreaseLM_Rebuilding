@@ -16,7 +16,6 @@ except:
     from transformers import get_constant_schedule, get_constant_schedule_with_warmup,  get_linear_schedule_with_warmup
 import wandb
 
-# from modeling import modeling_greaselm
 from modeling import modeling_greaselm_new_experiments
 from utils import data_utils
 from utils import optimization_utils
@@ -92,8 +91,7 @@ def construct_model(args, kg):
         raise ValueError("Invalid KG.")
     if args.cxt_node_connects_all:
         n_etype += 2
-    # model = modeling_greaselm_new_experiments.GreaseLM(args, args.encoder, k=args.k, n_ntype=n_ntype, n_etype=n_etype, n_concept=concept_num,
-    model = modeling_greaselm.GreaseLM(args, args.encoder, k=args.k, n_ntype=n_ntype, n_etype=n_etype, n_concept=concept_num,
+    model = modeling_greaselm_new_experiments.GreaseLM(args, args.encoder, k=args.k, n_ntype=n_ntype, n_etype=n_etype, n_concept=concept_num,
         concept_dim=args.gnn_dim,
         concept_in_dim=concept_in_dim,
         n_attention_head=args.att_head_num, fc_dim=args.fc_dim, n_fc_layer=args.fc_layer_num,

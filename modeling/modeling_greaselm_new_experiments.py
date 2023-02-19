@@ -797,14 +797,14 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
         self.sep_ie_layers = sep_ie_layers
         if sep_ie_layers:
             # self.ie_layers = nn.ModuleList([layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc) for _ in range(k)])
-            # self.ie_layers = nn.ModuleList([layers.Exchange(self.sent_dim + concept_dim, self.sent_dim, concept_dim) for _ in range(k)])
-            # self.ie_layers = nn.ModuleList([layers.ExchangedResidualConnectMLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc, alpha=1.0) for _ in range(k)])
-            self.ie_layers = nn.ModuleList([layers.ExchangedResidualConnect(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc, alpha=1.0) for _ in range(k)])
+            # self.ie_layers = nn.ModuleList([layers.Exchange(self.sent_dim, concept_dim) for _ in range(k)])
+            # self.ie_layers = nn.ModuleList([layers.ExchangeResidualConnectMLP(self.sent_dim, concept_dim, ie_dim, ie_layer_num, p_fc, alpha=1.0) for _ in range(k)])
+            self.ie_layers = layers.ExchangeResidualConnect(self.sent_dim, concept_dim, alpha=1.0)
         else:
             # self.ie_layer = layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc)
-            # self.ie_layer = layers.Exchange(self.sent_dim + concept_dim, self.sent_dim, concept_dim)
-            # self.ie_layers = layers.ExchangedResidualConnectMLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc, alpha=0.5)
-            self.ie_layers = layers.ExchangedResidualConnect(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc, alpha=1.0)
+            # self.ie_layer = layers.Exchange(self.sent_dim, concept_dim)
+            # self.ie_layers = layers.ExchangeResidualConnectMLP(self.sent_dim, concept_dim, ie_dim, ie_layer_num, p_fc, alpha=0.5)
+            self.ie_layers = layers.ExchangeResidualConnect(self.sent_dim, concept_dim, alpha=1.0)
 
         self.concept_dim = concept_dim
         self.num_hidden_layers = config.num_hidden_layers

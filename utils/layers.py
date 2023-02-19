@@ -91,9 +91,8 @@ class MLP(nn.Module):
 ######################################################
 
 class Exchange(nn.Module):
-    def __init__(self, input_size, sent_dim, concept_dim):
+    def __init__(self, sent_dim, concept_dim):
         super().__init__()
-        self.input_size = input_size
         self.sent_dim = sent_dim
         self.concept_dim = concept_dim
 
@@ -105,26 +104,21 @@ class Exchange(nn.Module):
         return torch.cat([self.concept2text(gnn_feats), self.text2concept(lm_feats)], dim=1)
 
 class ExchangeResidualConnectMLP(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_layers, dropout, batch_norm=False,
-                 init_last_layer_bias_to_zero=False, layer_norm=False, activation='gelu', alpha=0.5):
+    def __init__(self, sent_dim, concept_dim, hidden_size, num_layers, dropout, alpha=0.5):
         super().__init__()
 
-        self.mlp = MLP(input_size, hidden_size, output_size, num_layers, dropout, batch_norm, init_last_layer_bias_to_zero, layer_norm, activation)
-        self.exchange = Exchange(input_size, output_size, output_size)
+        self.mlp = MLP(sent_dim + concept_dim, hidden_size, sent_dim + concept_dim, num_layers, dropout)
+        self.exchange = Exchange(sent_dim + concept_dim, sent_dim, concept_dim)
         self.alpha = alpha
-        self.use_MLP = use_MLP
 
     def forward(self, inp):
         return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
 
 class ExchangeResidualConnect(nn.Module):
-    def __init__(self, input_size, sent_dim, concept_dim, alpha=0.5):
+    def __init__(self, sent_dim, concept_dim, alpha=0.5):
         super().__init__()
-        self.input_size = input_size
-        self.sent_dim = sent_dim
-        self.concept_dim = concept_dim
 
-        self.exchange = Exchange(input_size, output_size, output_size)
+        self.exchange = Exchange(sent_dim + concept_dim, sent_dim, concept_dim)
         self.alpha = alpha
 
     def forward(self, inp):
