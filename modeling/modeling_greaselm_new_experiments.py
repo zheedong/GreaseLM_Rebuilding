@@ -803,8 +803,8 @@ class RoBERTaGAT(modeling_bert.BertEncoder):
         else:
             # self.ie_layer = layers.MLP(self.sent_dim + concept_dim, ie_dim, self.sent_dim + concept_dim, ie_layer_num, p_fc)
             # self.ie_layer = layers.Exchange(self.sent_dim, concept_dim)
-            # self.ie_layers = layers.ExchangeResidualConnectMLP(self.sent_dim, concept_dim, ie_dim, ie_layer_num, p_fc, alpha=0.5)
-            self.ie_layers = layers.ExchangeResidualConnect(self.sent_dim, concept_dim, alpha=1.0)
+            # self.ie_layer = layers.ExchangeResidualConnectMLP(self.sent_dim, concept_dim, ie_dim, ie_layer_num, p_fc, alpha=0.5)
+            self.ie_layer = layers.ExchangeResidualConnect(self.sent_dim, concept_dim, alpha=1.0)
 
         self.concept_dim = concept_dim
         self.num_hidden_layers = config.num_hidden_layers
