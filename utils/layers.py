@@ -90,6 +90,14 @@ class MLP(nn.Module):
 # My Implementation starts here
 ######################################################
 
+class ResidualMLP(nn.Module):
+    def __init__(self, sent_dim, concept_dim, hidden_size, num_layers, dropout):
+        super().__init__()
+        self.mlp = MLP(sent_dim + concept_dim, hidden_size, sent_dim + concept_dim, num_layers, dropout)
+    
+    def forward(self, inp):
+        return self.mlp(inp) + inp
+
 class Exchange(nn.Module):
     def __init__(self, sent_dim, concept_dim):
         super().__init__()
