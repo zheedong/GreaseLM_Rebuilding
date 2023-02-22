@@ -121,7 +121,7 @@ class ExchangeResidualConnectMLP(nn.Module):
 
     def forward(self, inp):
         # return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
-        return self.exchange(inp) + self.mlp(inp)
+        return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
 
 class ExchangeResidualConnect(nn.Module):
     def __init__(self, sent_dim, concept_dim, alpha=0.5):
