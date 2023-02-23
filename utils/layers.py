@@ -128,7 +128,7 @@ class ExchangeResidualConnect(nn.Module):
         super().__init__()
 
         self.exchange = Exchange(sent_dim, concept_dim)
-        self.linear_combination = nn.Linear(2, sent_dim + concept_dim)
+        self.linear_combination = nn.Linear(2, 1)
 
     def forward(self, inp):
         wandb.log({"alpha":self.linear_combination.weight.data[0]})
