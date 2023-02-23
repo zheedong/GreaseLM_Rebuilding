@@ -133,6 +133,8 @@ class ExchangeResidualConnect(nn.Module):
     def forward(self, inp):
         wandb.log({"alpha":self.linear_combination.weight.data[0][0]})
         wandb.log({"beta":self.linear_combination.weight.data[0][1]})
+        print(inp.shape)
+        print(self.exchange(inp).shape) 
         return self.linear_combination(torch.stack([self.exchange(inp), inp], dim=1)).T
 
 ######################################################
