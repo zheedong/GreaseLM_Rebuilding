@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import numpy as np
 import math
+import wandb
 from utils.utils import freeze_net
 
 
@@ -112,26 +113,27 @@ class Exchange(nn.Module):
         return torch.cat([self.concept2text(gnn_feats), self.text2concept(lm_feats)], dim=1)
 
 class ExchangeResidualConnectMLP(nn.Module):
-    def __init__(self, sent_dim, concept_dim, hidden_size, num_layers, dropout, alpha=0.5):
+    def __init__(self, sent_dim, concept_dim, hidden_size, num_layers, dropout):
         super().__init__()
 
         self.mlp = MLP(sent_dim + concept_dim, hidden_size, sent_dim + concept_dim, num_layers, dropout)
         self.exchange = Exchange(sent_dim, concept_dim)
-        self.alpha = alpha
+        self.linear_combination = nn.Linear(sent_dim + concept_dim, sent_dim + concept_dim)
 
     def forward(self, inp):
-        # return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
-        return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
+        return self.linear_combination(self.exchange(inp), self.mlp(inp))
 
 class ExchangeResidualConnect(nn.Module):
-    def __init__(self, sent_dim, concept_dim, alpha=0.5):
+    def __init__(self, sent_dim, concept_dim):
         super().__init__()
 
         self.exchange = Exchange(sent_dim, concept_dim)
-        self.alpha = alpha
+        self.linear_combination = nn.Linear(sent_dim + concept_dim, sent_dim + concept_dim)
 
     def forward(self, inp):
-        return self.alpha * self.exchange(inp) + (1 - self.alpha) * inp
+        wandb.log({"alpha":self.linear_combination[0]})
+        wandb.log({"beta":self.linear_combination[1]})
+        return self.linear_combination(self.exchange(inp), inp)
 
 
 ######################################################
