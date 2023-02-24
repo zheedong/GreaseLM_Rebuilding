@@ -118,10 +118,10 @@ class ExchangeResidualConnectMLP(nn.Module):
 
         self.mlp = MLP(sent_dim + concept_dim, hidden_size, sent_dim + concept_dim, num_layers, dropout)
         self.exchange = Exchange(sent_dim, concept_dim)
-        self.linear_combination = nn.Linear(sent_dim + concept_dim, sent_dim + concept_dim)
+        self.linear_combination = nn.Linear(2 * (sent_dim + concept_dim), sent_dim + concept_dim)
 
     def forward(self, inp):
-        return self.linear_combination(self.exchange(inp), self.mlp(inp))
+        return self.linear_combination(torch.cat([self.exchange(inp), self.mlp(inp)], dim=1))
 
 class ExchangeResidualConnect(nn.Module):
     def __init__(self, sent_dim, concept_dim):
