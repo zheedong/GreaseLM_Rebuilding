@@ -143,7 +143,7 @@ class ExchangeResidualConnectMLPWithAlpha(nn.Module):
         self.alpha = alpha
 
     def forward(self, inp):
-        return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp
+        return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
 
 
 ######################################################
