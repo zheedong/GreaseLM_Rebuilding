@@ -133,6 +133,19 @@ class ExchangeResidualConnect(nn.Module):
     def forward(self, inp):
         return self.linear_combination(torch.cat([self.exchange(inp), inp], dim=1))
 
+class ExchangeResidualConnectMLPWithAlpha(nn.Module):
+    def __init__(self, sent_dim, concept_dim, hidden_size, num_layers, dropout, alpha=0.9):
+        super().__init__()
+
+        self.mlp = MLP(sent_dim + concept_dim, hidden_size, sent_dim + concept_dim, num_layers, dropout)
+        self.exchange = Exchange(sent_dim, concept_dim)
+        self.linear_combination = nn.Linear(2 * (sent_dim + concept_dim), sent_dim + concept_dim)
+        self.alpha = alpha
+
+    def forward(self, inp):
+        return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp
+
+
 ######################################################
 # My Implementation ends here
 ######################################################
