@@ -139,8 +139,7 @@ class ExchangeResidualConnectMLPWithAlpha(nn.Module):
 
         self.mlp = MLP(sent_dim + concept_dim, hidden_size, sent_dim + concept_dim, num_layers, dropout)
         self.exchange = Exchange(sent_dim, concept_dim)
-        self.linear_combination = nn.Linear(2 * (sent_dim + concept_dim), sent_dim + concept_dim)
-        self.alpha = nn.Parameter(torch.Tensor[0.8])
+        self.alpha = nn.Parameter(torch.Tensor([0.9]))
 
     def forward(self, inp):
         return self.alpha * self.exchange(inp) + (1 - self.alpha) * self.mlp(inp)
