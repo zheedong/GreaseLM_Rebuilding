@@ -362,7 +362,7 @@ def train(args, resume, has_test_split, devices, kg):
                     tb_writer.add_scalar('Train/Acc', n_corrects_acm / n_samples_acm, global_step)
                     tb_writer.add_scalar('Train/ms_per_batch', ms_per_batch, global_step)
                     tb_writer.flush()
-                wandb.log({"lr": scheduler.get_lr()[0], "train_loss": total_loss_acm / n_samples_acm, "train_acc": n_corrects_acm / n_samples_acm, "ms_per_batch": ms_per_batch}, step=global_step)
+                wandb.log({"lr": scheduler.get_lr()[0], "train_loss": total_loss_acm / n_samples_acm, "train_acc": n_corrects_acm / n_samples_acm, "ms_per_batch": ms_per_batch, "alpha": torch.Tensor(model.get_parameter('lmgnn.mp.encoder.ie_layer.alpha'))}, step=global_step)
 
                 total_loss_acm = 0.0
                 n_samples_acm = n_corrects_acm = 0
@@ -399,9 +399,9 @@ def train(args, resume, has_test_split, devices, kg):
             with open(log_path, 'a') as fout:
                 fout.write('{:3},{:5},{:7.4f},{:7.4f},{:7.4f},{:7.4f},{:3}\n'.format(epoch_id, global_step, dev_acc, test_acc, best_dev_acc, final_test_acc, best_dev_epoch))
 
-        wandb.log({"dev_acc": dev_acc, "dev_loss": dev_total_loss, "best_dev_acc": best_dev_acc, "best_dev_epoch": best_dev_epoch}, step=global_step)
+        wandb.log({"dev_acc": dev_acc, "dev_loss": dev_total_loss, "best_dev_acc": best_dev_acc, "best_dev_epoch": best_dev_epoch, "alpha": torch.Tensor(model.get_parameter('lmgnn.mp.encoder.ie_layer.alpha'))}, step=global_step)
         if has_test_split:
-            wandb.log({"test_acc": test_acc, "test_loss": test_total_loss, "final_test_acc": final_test_acc}, step=global_step)
+            wandb.log({"test_acc": test_acc, "test_loss": test_total_loss, "final_test_acc": final_test_acc, "alpha": torch.Tensor(model.get_parameter('lmgnn.mp.encoder.ie_layer.alpha'))}, step=global_step)
 
         # Save the model checkpoint
         if args.save_model:

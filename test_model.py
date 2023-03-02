@@ -4,14 +4,17 @@ import random
 import shutil
 import time
 
+from tensorboardX import SummaryWriter
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm, trange
 import transformers
 try:
     from transformers import (ConstantLRSchedule, WarmupLinearSchedule, WarmupConstantSchedule)
 except:
     from transformers import get_constant_schedule, get_constant_schedule_with_warmup,  get_linear_schedule_with_warmup
+import wandb
 
 from modeling import modeling_greaselm_new_experiments
 from utils import data_utils
@@ -236,6 +239,13 @@ def train(args, resume, has_test_split, devices, kg):
     count_parameters(loaded_params, not_loaded_params)
 
     no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+
+    print(model)
+    print(model.lmgnn.mp.encoder.ie_layer.alpha)
+    print(float(model.lmgnn.mp.encoder.ie_layer.alpha))
+    print(torch.Tensor(model.get_parameter('lmgnn.mp.encoder.ie_layer.alpha')))
+
+    return
 
     #########################################################
     # Create an optimizer
@@ -512,5 +522,84 @@ def main(args):
     has_test_split = True
     devices = get_devices(args.cuda)
     kg = "cpnet"
-    model = construct_model(kg)
-    print(model)
+    if args.dataset == "medqa_usmle":
+        kg = "ddb"
+
+    if not args.use_wandb:
+        wandb_mode = "disabled"
+    elif args.debug:
+        wandb_mode = "offline"
+    else:
+        wandb_mode = "online"
+
+    # We can optionally resume training from a checkpoint. If doing so, also set the `resume_id` so that you resume your previous wandb run instead of creating a new one.
+    resume = args.resume_checkpoint is not None and args.resume_checkpoint != "None"
+    wandb_id = args.resume_id if resume else wandb.util.generate_id()
+    args.wandb_id = wandb_id
+
+    args.hf_version = transformers.__version__
+
+    if args.mode == 'train':
+        train(args, resume, has_test_split, devices, kg)
+    elif "eval" in args.mode:
+        evaluate(args, has_test_split, devices, kg)
+    else:
+        raise ValueError('Invalid mode')
+
+
+if __name__ == '__main__':
+    __spec__ = None
+
+    parser = parser_utils.get_parser()
+    args, _ = parser.parse_known_args()
+
+    # General
+    parser.add_argument('--mode', default='train', choices=['train', 'eval'], help='run training or evaluation')
+    parser.add_argument('--save_dir', default=f'./saved_models/greaselm/', help='model output directory')
+    parser.add_argument('--save_model', default=True, type=utils.bool_flag, help="Whether to save model checkpoints or not.")
+    parser.add_argument('--load_model_path', default=None, help="The model checkpoint to load in the evaluation mode.")
+    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='show this help message and exit')
+    parser.add_argument("--run_name", required=True, type=str, help="The name of this experiment run.")
+    parser.add_argument("--resume_checkpoint", default=None, type=str,
+                        help="The checkpoint to resume training from.")
+    parser.add_argument('--use_wandb', default=False, type=utils.bool_flag, help="Whether to use wandb or not.")
+    parser.add_argument("--resume_id", default=None, type=str, help="The wandb run id to resume if `resume_checkpoint` is not None or 'None'.")
+
+    # Data
+    parser.add_argument('--train_adj', default=f'{args.data_dir}/{args.dataset}/graph/train.graph.adj.pk', help="The path to the retrieved KG subgraphs of the training set.")
+    parser.add_argument('--dev_adj', default=f'{args.data_dir}/{args.dataset}/graph/dev.graph.adj.pk', help="The path to the retrieved KG subgraphs of the dev set.")
+    parser.add_argument('--test_adj', default=f'{args.data_dir}/{args.dataset}/graph/test.graph.adj.pk', help="The path to the retrieved KG subgraphs of the test set.")
+    parser.add_argument('--max_node_num', default=200, type=int, help="Max number of nodes / the threshold used to prune nodes.")
+    parser.add_argument('--subsample', default=1.0, type=float, help="The ratio to subsample the training set.")
+    parser.add_argument('--n_train', default=-1, type=int, help="Number of training examples to use. Setting it to -1 means using the `subsample` argument to determine the training set size instead; otherwise it will override the `subsample` argument.")
+
+    # Model architecture
+    parser.add_argument('-k', '--k', default=5, type=int, help='The number of GreaseLM layers')
+    parser.add_argument('--att_head_num', default=2, type=int, help='number of attention heads of the final graph nodes\' pooling')
+    parser.add_argument('--gnn_dim', default=100, type=int, help='dimension of the GNN layers')
+    parser.add_argument('--fc_dim', default=200, type=int, help='number of FC hidden units (except for the MInt operators)')
+    parser.add_argument('--fc_layer_num', default=0, type=int, help='number of hidden layers of the final MLP')
+    parser.add_argument('--freeze_ent_emb', default=True, type=utils.bool_flag, nargs='?', const=True, help='Whether to freeze the entity embedding layer.')
+    parser.add_argument('--ie_dim', default=200, type=int, help='number of the hidden units of the MInt operator.')
+    parser.add_argument('--info_exchange', default=True, choices=[True, False, "every-other-layer"], type=utils.bool_str_flag, help="Whether we have the MInt operator in every GreaseLM layer or every other GreaseLM layer or not at all.")
+    parser.add_argument('--ie_layer_num', default=1, type=int, help='number of hidden layers in the MInt operator')
+    parser.add_argument("--sep_ie_layers", default=False, type=utils.bool_flag, help="Whether to share parameters across the MInt ops across differernt GreaseLM layers or not. Setting it to `False` means sharing.")
+    parser.add_argument('--random_ent_emb', default=False, type=utils.bool_flag, nargs='?', const=True, help='Whether to use randomly initialized learnable entity embeddings or not.')
+    parser.add_argument("--cxt_node_connects_all", default=False, type=utils.bool_flag, help="Whether to connect the interaction node to all the retrieved KG nodes or only the linked nodes.")
+
+
+    # Regularization
+    parser.add_argument('--dropouti', type=float, default=0.2, help='dropout for embedding layer')
+    parser.add_argument('--dropoutg', type=float, default=0.2, help='dropout for GNN layers')
+    parser.add_argument('--dropoutf', type=float, default=0.2, help='dropout for fully-connected layers')
+
+    # Optimization
+    parser.add_argument('-dlr', '--decoder_lr', default=DECODER_DEFAULT_LR[args.dataset], type=float, help='Learning rate of parameters not in LM')
+    parser.add_argument('-mbs', '--mini_batch_size', default=1, type=int)
+    parser.add_argument('-ebs', '--eval_batch_size', default=2, type=int)
+    parser.add_argument('--unfreeze_epoch', default=4, type=int, help="Number of the first few epochs in which LM’s parameters are kept frozen.")
+    parser.add_argument('--refreeze_epoch', default=10000, type=int)
+    parser.add_argument('--init_range', default=0.02, type=float, help='stddev when initializing with normal distribution')
+
+    args = parser.parse_args()
+    main(args)
