@@ -42,8 +42,8 @@ then
   max_epochs_before_stop=10
   ie_dim=400
 else
-  # n_epochs=50
-  n_epochs=30
+  n_epochs=50
+  # n_epochs=30
   max_epochs_before_stop=10
   ie_dim=400
 fi
